@@ -24,8 +24,8 @@ from typing import Any
 
 from rich.panel import Panel
 from rich.table import Table
-
-from .common_modulus_attack import common_modulus_attack
+from .common_modulus_attack import common_modulus_attack_pp1
+from .common_modulus_attack import common_modulus_attack_pp2
 from .display import (
     console,
     format_int,
@@ -235,7 +235,7 @@ def run_demo(args: argparse.Namespace) -> None:
     timings["Mã hóa C1, C2"] = time.perf_counter() - start
 
     start = time.perf_counter()
-    recovered_m, trace = common_modulus_attack(c1, c2, e1, e2, n)
+    recovered_m, trace = common_modulus_attack_pp2(c1, c2, e1, e2, n)
     timings["Common Modulus Attack"] = time.perf_counter() - start
 
     recovered_text = recover_text_safely(recovered_m)
@@ -298,7 +298,7 @@ def run_attack(args: argparse.Namespace) -> None:
     print_title("ATTACK THỦ CÔNG: RSA COMMON MODULUS ATTACK")
 
     start = time.perf_counter()
-    recovered_m, trace = common_modulus_attack(
+    recovered_m, trace = common_modulus_attack_pp2(
         c1=args.c1,
         c2=args.c2,
         e1=args.e1,

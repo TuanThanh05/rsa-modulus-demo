@@ -59,7 +59,7 @@ from .number_theory import extended_gcd
 from .number_theory import mod_inverse
 
 
-def validate_attack_inputs(
+def validate_attack_inputs_pp2(
     c1: int,
     c2: int,
     e1: int,
@@ -416,7 +416,7 @@ def common_modulus_attack_pp2(
         ValueError:
             Nếu input không hợp lệ hoặc gcd(e1, e2) != 1.
     """
-    validate_attack_inputs(c1, c2, e1, e2, n)
+    validate_attack_inputs_pp2(c1, c2, e1, e2, n)
 
     gcd_e1_e2 = gcd(e1, e2)
 

@@ -57,7 +57,7 @@ def test_common_modulus_attack_recovers_known_example():
     c1 = 140
     c2 = 30
 
-    recovered_m, trace = common_modulus_attack(c1, c2, e1, e2, n)
+    recovered_m, trace = common_modulus_attack_pp2(c1, c2, e1, e2, n)
 
     assert recovered_m == 30
     assert trace["recovered_m"] == 30
@@ -70,7 +70,7 @@ def test_common_modulus_attack_trace_contains_expected_values():
     c1 = 140
     c2 = 30
 
-    recovered_m, trace = common_modulus_attack(c1, c2, e1, e2, n)
+    recovered_m, trace = common_modulus_attack_pp2(c1, c2, e1, e2, n)
 
     assert recovered_m == 30
     assert trace["attack_name"] == "RSA Common Modulus Attack"
@@ -88,7 +88,7 @@ def test_common_modulus_attack_trace_contains_expected_values():
 
 def test_common_modulus_attack_rejects_non_coprime_exponents():
     with pytest.raises(ValueError):
-        common_modulus_attack(
+        common_modulus_attack_pp2(
             c1=10,
             c2=20,
             e1=6,
@@ -164,7 +164,7 @@ def test_common_modulus_attack_pp2_alias_still_works():
         n=n,
     )
 
-    recovered_m_from_alias, trace_alias = common_modulus_attack(
+    recovered_m_from_alias, trace_alias = common_modulus_attack_pp2(
         c1=c1,
         c2=c2,
         e1=e1,
