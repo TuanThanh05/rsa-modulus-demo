@@ -1,7 +1,7 @@
 from .number_theory import gcd
 from .number_theory import extended_gcd
 from .number_theory import mod_inverse
-
+from src.common_modulus_attack import validate_attack_inputs_pp2
 
 def validate_attack_inputs_pp2(
     c1: int,
