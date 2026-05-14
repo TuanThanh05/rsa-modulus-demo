@@ -1,20 +1,4 @@
-"""
-number_theory.py
-
-Các hàm lý thuyết số nền tảng dùng cho RSA và Common Modulus Attack.
-File này không phụ thuộc thư viện ngoài.
-"""
-
-
 def gcd(a: int, b: int) -> int:
-    """
-    Tính ước chung lớn nhất không âm của a và b.
-
-    Examples:
-        gcd(84, 30) -> 6
-        gcd(84, -30) -> 6
-        gcd(0, 7) -> 7
-    """
     a = abs(a)
     b = abs(b)
 
@@ -27,19 +11,6 @@ def gcd(a: int, b: int) -> int:
 
 
 def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
-    """
-    Thuật toán Euclid mở rộng.
-
-    Returns:
-        (g, x, y), trong đó:
-            g = gcd(a, b)
-            x*a + y*b = g
-
-    Example:
-        extended_gcd(67, 12) -> (1, -5, 28)
-        Vì:
-            -5*67 + 28*12 = 1
-    """
     old_r = a
     r = b
 
@@ -82,16 +53,6 @@ def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
 
 
 def mod_inverse(a: int, n: int) -> int:
-    """
-    Tìm nghịch đảo modulo của a theo modulo n.
-
-    Returns:
-        x sao cho:
-            a*x ≡ 1 mod n
-
-    Raises:
-        ValueError: Nếu gcd(a, n) != 1.
-    """
     g, x, y = extended_gcd(a, n)
 
     if g != 1:
@@ -103,9 +64,6 @@ def mod_inverse(a: int, n: int) -> int:
 
 
 def is_coprime(a: int, b: int) -> bool:
-    """
-    Kiểm tra a và b có nguyên tố cùng nhau không.
-    """
     result = gcd(a, b)
 
     if result == 1:

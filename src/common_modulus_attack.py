@@ -1,59 +1,3 @@
-"""
-common_modulus_attack.py
-
-Triển khai hai kỹ thuật RSA Common Modulus Attack.
-
-PP1 - Cách thức 1:
-    Kẻ tấn công có:
-        - n dùng chung
-        - e_victim: khóa công khai của nạn nhân
-        - e_attacker: khóa công khai của kẻ tấn công
-        - d_attacker: khóa bí mật của kẻ tấn công
-        - ciphertext: bản mã cần giải
-
-    Mục tiêu:
-        - Tìm một private exponent hợp lệ cho nạn nhân
-        - Dùng private exponent đó để giải mã ciphertext
-
-    Ý tưởng:
-        Vì attacker_e * attacker_d ≡ 1 mod phi(n)
-        nên:
-            attacker_e * attacker_d - 1 = k * phi(n)
-
-        Đặt:
-            t = attacker_e * attacker_d - 1
-
-        Vì t là bội của phi(n), nếu tìm được s sao cho:
-            r*t + s*victim_e = 1
-
-        thì:
-            s*victim_e ≡ 1 mod t
-
-        Do phi(n) chia t, suy ra:
-            s*victim_e ≡ 1 mod phi(n)
-
-        Vậy s có thể dùng như private exponent của victim.
-
-PP2 - Cách thức 2:
-    Kẻ tấn công có:
-        - n dùng chung
-        - e1, e2 nguyên tố cùng nhau
-        - c1 = m^e1 mod n
-        - c2 = m^e2 mod n
-
-    Mục tiêu:
-        - Khôi phục trực tiếp bản rõ m
-
-    Ý tưởng:
-        Dùng Extended Euclidean Algorithm tìm a, b:
-            a*e1 + b*e2 = 1
-
-        Suy ra:
-            m = c1^a * c2^b mod n
-
-        Nếu a hoặc b âm, cần dùng nghịch đảo modulo.
-"""
-
 from .number_theory import gcd
 from .number_theory import extended_gcd
 from .number_theory import mod_inverse
@@ -66,22 +10,6 @@ def validate_attack_inputs_pp2(
     e2: int,
     n: int,
 ) -> None:
-    """
-    Kiểm tra dữ liệu đầu vào cho Common Modulus Attack PP2.
-
-    Args:
-        c1: Bản mã thứ nhất.
-        c2: Bản mã thứ hai.
-        e1: Public exponent thứ nhất.
-        e2: Public exponent thứ hai.
-        n: Modulus RSA dùng chung.
-
-    Returns:
-        None
-
-    Raises:
-        ValueError: Nếu input không hợp lệ.
-    """
     if n <= 1:
         raise ValueError("n phải là số nguyên lớn hơn 1")
 
@@ -108,22 +36,6 @@ def validate_attack_inputs_pp1(
     attacker_d: int,
     n: int,
 ) -> None:
-    """
-    Kiểm tra dữ liệu đầu vào cho Common Modulus Attack PP1.
-
-    Args:
-        ciphertext: Bản mã cần giải.
-        victim_e: Public exponent của nạn nhân.
-        attacker_e: Public exponent của kẻ tấn công.
-        attacker_d: Private exponent của kẻ tấn công.
-        n: Modulus RSA dùng chung.
-
-    Returns:
-        None
-
-    Raises:
-        ValueError: Nếu input không hợp lệ.
-    """
     if n <= 1:
         raise ValueError("n phải là số nguyên lớn hơn 1")
 
@@ -144,27 +56,6 @@ def validate_attack_inputs_pp1(
 
 
 def handle_negative_power(c: int, exponent: int, n: int) -> int:
-    """
-    Tính c^exponent mod n, kể cả khi exponent âm.
-
-    Nếu exponent >= 0:
-        c^exponent mod n
-
-    Nếu exponent < 0:
-        c^exponent mod n
-        = (c^-1)^abs(exponent) mod n
-
-    Args:
-        c: Cơ số, thường là c1 hoặc c2.
-        exponent: Số mũ Bézout, có thể âm.
-        n: Modulus RSA.
-
-    Returns:
-        int: Giá trị c^exponent mod n.
-
-    Raises:
-        ValueError: Nếu cần nghịch đảo modulo nhưng c không có inverse modulo n.
-    """
     if n <= 1:
         raise ValueError("n phải là số nguyên lớn hơn 1")
 
@@ -196,26 +87,6 @@ def compute_signed_power_with_trace(
     n: int,
     label: str,
 ) -> tuple[int, dict[str, int | str | bool]]:
-    """
-    Tính c^exponent mod n và trả thêm trace để hiển thị.
-
-    Args:
-        c: Bản mã c1 hoặc c2.
-        exponent: Số mũ Bézout tương ứng.
-        n: Modulus RSA.
-        label: Nhãn để ghi trace, ví dụ "C1" hoặc "C2".
-
-    Returns:
-        tuple:
-            (
-                result,
-                trace
-            )
-
-        Trong đó:
-            result là int
-            trace là dict mô tả cách tính.
-    """
     if exponent >= 0:
         result = pow(c, exponent, n)
 
@@ -257,50 +128,6 @@ def common_modulus_attack_pp1(
     attacker_d: int,
     n: int,
 ) -> tuple[int, int, dict[str, int | str | list[dict[str, int]]]]:
-    """
-    Thực hiện Common Modulus Attack PP1.
-
-    Kịch bản:
-        Có nhiều người dùng chung modulus n.
-
-        Kẻ tấn công biết khóa của chính mình:
-            public key  = (n, attacker_e)
-            private key = (n, attacker_d)
-
-        Kẻ tấn công cũng biết public exponent của nạn nhân:
-            victim_e
-
-        Từ đó, kẻ tấn công tìm một private exponent hợp lệ
-        cho nạn nhân rồi giải mã ciphertext.
-
-    Args:
-        ciphertext: Bản mã cần giải.
-        victim_e: Public exponent của nạn nhân.
-        attacker_e: Public exponent của kẻ tấn công.
-        attacker_d: Private exponent của kẻ tấn công.
-        n: Modulus RSA dùng chung.
-
-    Returns:
-        tuple:
-            (
-                recovered_victim_d,
-                recovered_m,
-                trace
-            )
-
-        recovered_victim_d:
-            Một private exponent hợp lệ cho victim.
-
-        recovered_m:
-            Bản rõ dạng số nguyên khôi phục được.
-
-        trace:
-            Dictionary chứa các bước trung gian để hiển thị.
-
-    Raises:
-        ValueError:
-            Nếu input không hợp lệ hoặc không tìm được private exponent.
-    """
     validate_attack_inputs_pp1(
         ciphertext=ciphertext,
         victim_e=victim_e,
@@ -384,38 +211,6 @@ def common_modulus_attack_pp2(
     e2: int,
     n: int,
 ) -> tuple[int, dict[str, int | str | bool | dict]]:
-    """
-    Thực hiện Common Modulus Attack PP2.
-
-    Kịch bản:
-        c1 = m^e1 mod n
-        c2 = m^e2 mod n
-        gcd(e1, e2) = 1
-
-    Args:
-        c1: Bản mã thứ nhất.
-        c2: Bản mã thứ hai.
-        e1: Public exponent thứ nhất.
-        e2: Public exponent thứ hai.
-        n: Modulus RSA dùng chung.
-
-    Returns:
-        tuple:
-            (
-                recovered_m,
-                trace
-            )
-
-        recovered_m:
-            Bản rõ dạng số nguyên đã khôi phục.
-
-        trace:
-            Dictionary chứa các bước trung gian để display.py in ra.
-
-    Raises:
-        ValueError:
-            Nếu input không hợp lệ hoặc gcd(e1, e2) != 1.
-    """
     validate_attack_inputs_pp2(c1, c2, e1, e2, n)
 
     gcd_e1_e2 = gcd(e1, e2)

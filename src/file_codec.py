@@ -20,6 +20,8 @@ Khi dùng RSA, bản rõ dạng số nguyên m phải thỏa:
     0 <= m < n
 """
 
+from pathlib import Path
+
 
 def bytes_to_int(data: bytes) -> int:
     """
@@ -33,9 +35,6 @@ def bytes_to_int(data: bytes) -> int:
 
     Example:
         bytes_to_int(b"ABC") -> 4276803
-
-    Ghi chú:
-        Dùng byteorder="big" nghĩa là byte bên trái có trọng số lớn hơn.
     """
     if not isinstance(data, bytes):
         raise TypeError("data phải có kiểu bytes")
@@ -61,14 +60,13 @@ def int_to_bytes(value: int, length: int | None = None) -> bytes:
         bytes: Dữ liệu bytes khôi phục từ số nguyên.
 
     Raises:
-        ValueError:
-            Nếu value âm.
-            Nếu length không đủ để chứa value.
+        TypeError: Nếu value hoặc length sai kiểu.
+        ValueError: Nếu value âm hoặc length không đủ.
 
     Example:
         int_to_bytes(4276803) -> b"ABC"
 
-    Ghi chú quan trọng:
+    Ghi chú:
         Nếu dữ liệu gốc có byte 0 ở đầu, ví dụ b"\\x00ABC",
         thì bytes_to_int sẽ làm mất thông tin "có byte 0 ở đầu".
         Muốn khôi phục chính xác, cần truyền length ban đầu.
@@ -90,9 +88,7 @@ def int_to_bytes(value: int, length: int | None = None) -> bytes:
         if length is None:
             return b""
 
-        zero_bytes = bytes(length)
-
-        return zero_bytes
+        return bytes(length)
 
     minimum_length = (value.bit_length() + 7) // 8
 
@@ -117,15 +113,14 @@ def text_to_int(text: str, encoding: str = "utf-8") -> int:
 
     Returns:
         int: Số nguyên biểu diễn chuỗi text.
-
-    Example:
-        text_to_int("ABC") -> 4276803
     """
     if not isinstance(text, str):
         raise TypeError("text phải có kiểu str")
 
-    text_bytes = text.encode(encoding)
+    if not isinstance(encoding, str):
+        raise TypeError("encoding phải có kiểu str")
 
+    text_bytes = text.encode(encoding)
     value = bytes_to_int(text_bytes)
 
     return value
@@ -142,21 +137,19 @@ def int_to_text(value: int, encoding: str = "utf-8") -> str:
     Returns:
         str: Chuỗi text khôi phục từ số nguyên.
 
-    Example:
-        int_to_text(4276803) -> "ABC"
-
     Raises:
-        UnicodeDecodeError:
-            Nếu bytes khôi phục không giải mã được theo encoding.
+        UnicodeDecodeError: Nếu bytes khôi phục không giải mã được.
     """
-    text_bytes = int_to_bytes(value)
+    if not isinstance(encoding, str):
+        raise TypeError("encoding phải có kiểu str")
 
+    text_bytes = int_to_bytes(value)
     text = text_bytes.decode(encoding)
 
     return text
 
 
-def read_file_as_bytes(path: str) -> bytes:
+def read_file_as_bytes(path: str | Path) -> bytes:
     """
     Đọc file dưới dạng bytes.
 
@@ -166,13 +159,15 @@ def read_file_as_bytes(path: str) -> bytes:
     Returns:
         bytes: Nội dung file.
     """
-    with open(path, "rb") as file:
+    file_path = Path(path)
+
+    with open(file_path, "rb") as file:
         data = file.read()
 
     return data
 
 
-def write_bytes_to_file(data: bytes, path: str) -> None:
+def write_bytes_to_file(data: bytes, path: str | Path) -> None:
     """
     Ghi dữ liệu bytes ra file.
 
@@ -186,11 +181,16 @@ def write_bytes_to_file(data: bytes, path: str) -> None:
     if not isinstance(data, bytes):
         raise TypeError("data phải có kiểu bytes")
 
-    with open(path, "wb") as file:
+    file_path = Path(path)
+
+    if file_path.parent != Path("."):
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+
+    with open(file_path, "wb") as file:
         file.write(data)
 
 
-def read_file_as_int(path: str) -> int:
+def read_file_as_int(path: str | Path) -> int:
     """
     Đọc file và chuyển nội dung file thành số nguyên.
 
@@ -201,7 +201,6 @@ def read_file_as_int(path: str) -> int:
         int: Số nguyên biểu diễn nội dung file.
     """
     data = read_file_as_bytes(path)
-
     value = bytes_to_int(data)
 
     return value
@@ -209,7 +208,7 @@ def read_file_as_int(path: str) -> int:
 
 def write_int_to_file(
     value: int,
-    path: str,
+    path: str | Path,
     length: int | None = None,
 ) -> None:
     """
@@ -224,7 +223,6 @@ def write_int_to_file(
         None
     """
     data = int_to_bytes(value, length)
-
     write_bytes_to_file(data, path)
 
 
@@ -237,9 +235,6 @@ def get_byte_length_from_int(value: int) -> int:
 
     Returns:
         int: Số byte tối thiểu.
-
-    Example:
-        get_byte_length_from_int(4276803) -> 3
     """
     if not isinstance(value, int):
         raise TypeError("value phải có kiểu int")
