@@ -23,13 +23,14 @@ def generate_shared_modulus(bits: int) -> dict[str, int]:
     if bits < 16:
         raise ValueError("bits nên >= 16. Demo nhỏ quá dễ lỗi và không đại diện RSA.")
 
-    prime_bits = bits // 2
+    p_bits = bits // 2
+    q_bits = bits - p_bits
 
-    p = generate_prime(prime_bits)
-    q = generate_prime(prime_bits)
+    p = generate_prime(p_bits)
+    q = generate_prime(q_bits)
 
     while q == p:
-        q = generate_prime(prime_bits)
+        q = generate_prime(q_bits)
 
     n = p * q
 

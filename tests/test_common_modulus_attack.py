@@ -1,15 +1,15 @@
 import pytest
 
-from src.rsa_core import generate_two_keys_with_shared_n
-from src.rsa_core import rsa_encrypt_int
-
-from src.common_modulus_attack import validate_attack_inputs
-from src.common_modulus_attack import handle_negative_power
+from src.common_modulus_attack import common_modulus_attack
 from src.common_modulus_attack import common_modulus_attack_pp1
 from src.common_modulus_attack import common_modulus_attack_pp2
+from src.common_modulus_attack import handle_negative_power
+from src.common_modulus_attack import validate_attack_inputs
+from src.common_modulus_attack import validate_attack_inputs_pp1
+from src.common_modulus_attack import validate_attack_inputs_pp2
 
 
-def test_validate_attack_inputs_accepts_valid_input():
+def test_validate_attack_inputs_alias_accepts_valid_pp2_input():
     validate_attack_inputs(
         c1=140,
         c2=30,
@@ -19,15 +19,25 @@ def test_validate_attack_inputs_accepts_valid_input():
     )
 
 
-def test_validate_attack_inputs_rejects_invalid_n():
+def test_validate_attack_inputs_pp2_rejects_invalid_n():
     with pytest.raises(ValueError):
-        validate_attack_inputs(
+        validate_attack_inputs_pp2(
             c1=140,
             c2=30,
             e1=5,
             e2=7,
             n=1,
         )
+
+
+def test_validate_attack_inputs_pp1_accepts_valid_input():
+    validate_attack_inputs_pp1(
+        ciphertext=27,
+        victim_e=13,
+        attacker_e=23,
+        attacker_d=67,
+        n=253,
+    )
 
 
 def test_handle_negative_power_positive_exponent():
@@ -50,7 +60,16 @@ def test_handle_negative_power_negative_exponent():
     assert result == 87
 
 
-def test_common_modulus_attack_recovers_known_example():
+def test_handle_negative_power_rejects_non_invertible_base_when_exponent_is_negative():
+    with pytest.raises(ValueError):
+        handle_negative_power(
+            c=11,
+            exponent=-1,
+            n=253,
+        )
+
+
+def test_common_modulus_attack_pp2_recovers_known_example():
     n = 247
     e1 = 5
     e2 = 7
@@ -63,7 +82,7 @@ def test_common_modulus_attack_recovers_known_example():
     assert trace["recovered_m"] == 30
 
 
-def test_common_modulus_attack_trace_contains_expected_values():
+def test_common_modulus_attack_pp2_trace_contains_expected_values():
     n = 247
     e1 = 5
     e2 = 7
@@ -73,6 +92,7 @@ def test_common_modulus_attack_trace_contains_expected_values():
     recovered_m, trace = common_modulus_attack_pp2(c1, c2, e1, e2, n)
 
     assert recovered_m == 30
+    assert trace["attack_method"] == "PP2"
     assert trace["attack_name"] == "RSA Common Modulus Attack"
     assert trace["gcd_e1_e2"] == 1
     assert trace["bezout_check"] == 1
@@ -86,7 +106,7 @@ def test_common_modulus_attack_trace_contains_expected_values():
     assert (trace["part1"] * trace["part2"]) % n == 30
 
 
-def test_common_modulus_attack_rejects_non_coprime_exponents():
+def test_common_modulus_attack_pp2_rejects_non_coprime_exponents():
     with pytest.raises(ValueError):
         common_modulus_attack_pp2(
             c1=10,
@@ -95,6 +115,36 @@ def test_common_modulus_attack_rejects_non_coprime_exponents():
             e2=10,
             n=77,
         )
+
+
+def test_common_modulus_attack_pp2_alias_still_works():
+    n = 247
+    e1 = 5
+    e2 = 7
+    c1 = 140
+    c2 = 30
+
+    recovered_m_from_pp2, trace_pp2 = common_modulus_attack_pp2(
+        c1=c1,
+        c2=c2,
+        e1=e1,
+        e2=e2,
+        n=n,
+    )
+
+    recovered_m_from_alias, trace_alias = common_modulus_attack(
+        c1=c1,
+        c2=c2,
+        e1=e1,
+        e2=e2,
+        n=n,
+    )
+
+    assert recovered_m_from_pp2 == 30
+    assert recovered_m_from_alias == 30
+
+    assert trace_pp2["attack_method"] == "PP2"
+    assert trace_alias["attack_method"] == "PP2"
 
 
 def test_common_modulus_attack_pp1_recovers_private_key_and_message():
@@ -147,36 +197,6 @@ def test_common_modulus_attack_pp1_trace_contains_expected_values():
     assert first_step["bezout_check"] == 1
     assert first_step["recovered_victim_d"] == 237
     assert first_step["recovered_m"] == 25
-
-
-def test_common_modulus_attack_pp2_alias_still_works():
-    n = 247
-    e1 = 5
-    e2 = 7
-    c1 = 140
-    c2 = 30
-
-    recovered_m_from_pp2, trace_pp2 = common_modulus_attack_pp2(
-        c1=c1,
-        c2=c2,
-        e1=e1,
-        e2=e2,
-        n=n,
-    )
-
-    recovered_m_from_alias, trace_alias = common_modulus_attack_pp2(
-        c1=c1,
-        c2=c2,
-        e1=e1,
-        e2=e2,
-        n=n,
-    )
-
-    assert recovered_m_from_pp2 == 30
-    assert recovered_m_from_alias == 30
-
-    assert trace_pp2["attack_method"] == "PP2"
-    assert trace_alias["attack_method"] == "PP2"
 
 
 def test_common_modulus_attack_pp1_rejects_invalid_ciphertext():
