@@ -3,16 +3,22 @@ main.py
 
 Điểm chạy chính của project RSA Common Modulus Attack Demo.
 
-Chạy từ thư mục gốc project bằng:
+Các chế độ chính:
+
+    python -m src.main auto
+    python -m src.main manual
+
+Alias tương thích:
 
     python -m src.main demo
-    python -m src.main demo --message "HELLO PTIT" --bits 512
+    python -m src.main demo-pp2
+    python -m src.main attack
+    python -m src.main attack-pp2
 
-    python -m src.main demo-pp1 --message "HELLO" --bits 512
-    python -m src.main demo-pp2 --message "HELLO" --bits 512
+PP1 giữ lại để tham khảo:
 
-    python -m src.main attack-pp1 --n 253 --victim-e 13 --attacker-e 23 --attacker-d 67 --ciphertext 27
-    python -m src.main attack-pp2 --n 247 --e1 5 --e2 7 --c1 140 --c2 30
+    python -m src.main demo-pp1
+    python -m src.main attack-pp1
 
 Lưu ý:
 - Đây là textbook RSA phục vụ học tập.
@@ -28,6 +34,8 @@ from pathlib import Path
 from typing import Any
 
 from rich.panel import Panel
+from rich.prompt import Confirm
+from rich.prompt import Prompt
 
 from .common_modulus_attack import common_modulus_attack_pp1
 from .common_modulus_attack import common_modulus_attack_pp2
@@ -76,6 +84,19 @@ def parse_int(value: str) -> int:
         raise argparse.ArgumentTypeError(
             f"Không chuyển được '{value}' thành số nguyên."
         ) from exc
+
+
+def prompt_int_if_missing(value: int | None, label: str) -> int:
+    """
+    Nếu value đã có thì trả về value.
+    Nếu value chưa có thì hỏi người dùng nhập bằng Prompt.
+    """
+    if value is not None:
+        return value
+
+    raw_value = Prompt.ask(label)
+
+    return parse_int(raw_value)
 
 
 def load_demo_message(args: argparse.Namespace) -> tuple[str, bytes, int]:
@@ -165,21 +186,21 @@ def write_recovered_output_file(
     console.print(f"[green]✓ Đã ghi dữ liệu khôi phục ra:[/green] {output_file}")
 
 
-def run_demo_pp2(args: argparse.Namespace) -> None:
+def run_auto_demo_pp2(args: argparse.Namespace) -> None:
     """
-    Chạy demo tự động PP2:
+    Chạy chế độ tự động PP2.
 
-    1. Nhận message.
-    2. Sinh n dùng chung.
-    3. Tạo hai public key khác e.
-    4. Mã hóa cùng một message thành C1, C2.
-    5. Dùng PP2 khôi phục message.
-    6. In toàn bộ trace.
+    Luồng:
+    1. Nhận bản rõ.
+    2. Sinh N chung và hai cặp khóa khác e.
+    3. Mã hóa cùng bản rõ thành C1, C2.
+    4. Tấn công PP2 để khôi phục M.
+    5. Hiển thị toàn bộ trace.
     """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
 
-    print_title("DEMO TỰ ĐỘNG PP2: KHÔI PHỤC BẢN RÕ TỪ C1, C2")
+    print_title("CHẾ ĐỘ TỰ ĐỘNG: MÔ PHỎNG COMMON MODULUS ATTACK PP2")
 
     message_display, message_bytes, message_int = load_demo_message(args)
 
@@ -202,17 +223,17 @@ def run_demo_pp2(args: argparse.Namespace) -> None:
         n_bits = n.bit_length()
 
         raise ValueError(
-            "Message hiện tại quá lớn so với modulus n.\n"
-            f"- message_int có khoảng {message_bits} bit\n"
-            f"- n có khoảng {n_bits} bit\n"
-            "Cách sửa: tăng --bits hoặc dùng message ngắn hơn.\n"
-            'Ví dụ: python -m src.main demo-pp2 --message "HELLO" --bits 512'
+            "Bản rõ hiện tại quá lớn so với modulus N.\n"
+            f"- Bản rõ dạng số nguyên có khoảng {message_bits} bit\n"
+            f"- N có khoảng {n_bits} bit\n"
+            "Cách sửa: tăng --bits hoặc dùng bản rõ ngắn hơn.\n"
+            'Ví dụ: python -m src.main auto --message "HELLO" --bits 512'
         ) from exc
 
     start = time.perf_counter()
     c1 = rsa_encrypt_int(message_int, e1, n)
     c2 = rsa_encrypt_int(message_int, e2, n)
-    timings["Mã hóa C1, C2"] = time.perf_counter() - start
+    timings["Mã hóa C1 và C2"] = time.perf_counter() - start
 
     start = time.perf_counter()
     recovered_m, trace = common_modulus_attack_pp2(
@@ -234,7 +255,7 @@ def run_demo_pp2(args: argparse.Namespace) -> None:
         )
 
     print_modulus_info(modulus_info)
-    print_keys_info(key1, key2, key1_label="victim/key1", key2_label="receiver/key2")
+    print_keys_info(key1, key2, key1_label="khóa 1", key2_label="khóa 2")
     print_message_info(message_display, message_int)
     print_encryption_info(message_int, c1, c2, e1, e2, n)
     print_attack_trace(trace)
@@ -244,7 +265,7 @@ def run_demo_pp2(args: argparse.Namespace) -> None:
     print_timing_info(timings)
 
     demo_json = {
-        "mode": "demo-pp2",
+        "mode": "auto-pp2",
         "bits": args.bits,
         "message_display": message_display,
         "message_int": message_int,
@@ -259,6 +280,7 @@ def run_demo_pp2(args: argparse.Namespace) -> None:
             "c1": c1,
             "c2": c2,
         },
+        "trace": trace,
         "recovered_m": recovered_m,
         "recovered_text": recovered_text,
         "success": message_int == recovered_m,
@@ -268,16 +290,80 @@ def run_demo_pp2(args: argparse.Namespace) -> None:
     save_demo_json(args.save_json, demo_json)
 
 
+def run_manual_attack_pp2(args: argparse.Namespace) -> None:
+    """
+    Chạy chế độ thủ công PP2.
+
+    Người dùng có thể nhập bằng CLI flags hoặc nhập lần lượt bằng Prompt.
+    Cần có:
+        N, e1, e2, C1, C2
+    """
+    timings: dict[str, float] = {}
+    total_start = time.perf_counter()
+
+    print_title("CHẾ ĐỘ THỦ CÔNG: TẤN CÔNG PP2 TỪ N, e1, e2, C1, C2")
+
+    n = prompt_int_if_missing(args.n, "Nhập modulus N")
+    e1 = prompt_int_if_missing(args.e1, "Nhập số mũ công khai e1")
+    e2 = prompt_int_if_missing(args.e2, "Nhập số mũ công khai e2")
+    c1 = prompt_int_if_missing(args.c1, "Nhập bản mã C1")
+    c2 = prompt_int_if_missing(args.c2, "Nhập bản mã C2")
+
+    start = time.perf_counter()
+    recovered_m, trace = common_modulus_attack_pp2(
+        c1=c1,
+        c2=c2,
+        e1=e1,
+        e2=e2,
+        n=n,
+    )
+    timings["Common Modulus Attack PP2"] = time.perf_counter() - start
+
+    recovered_text: str | None = None
+
+    if args.decode_text:
+        recovered_text = recover_text_safely(recovered_m)
+
+    if args.output_file is not None:
+        write_recovered_output_file(
+            output_file=args.output_file,
+            recovered_m=recovered_m,
+            length=args.output_length,
+        )
+
+    print_attack_trace(trace)
+    print_manual_attack_result(
+        recovered_m=recovered_m,
+        recovered_text=recovered_text,
+        output_file=args.output_file,
+    )
+
+    timings["Tổng thời gian"] = time.perf_counter() - total_start
+    print_timing_info(timings)
+
+    manual_json = {
+        "mode": "manual-pp2",
+        "input": {
+            "n": n,
+            "e1": e1,
+            "e2": e2,
+            "c1": c1,
+            "c2": c2,
+        },
+        "trace": trace,
+        "recovered_m": recovered_m,
+        "recovered_text": recovered_text,
+        "timings": timings,
+    }
+
+    save_demo_json(args.save_json, manual_json)
+
+
 def run_demo_pp1(args: argparse.Namespace) -> None:
     """
-    Chạy demo tự động PP1:
+    Chạy demo tự động PP1.
 
-    1. Nhận message.
-    2. Sinh n dùng chung.
-    3. Tạo victim key và attacker key dùng chung n.
-    4. Mã hóa message bằng public key của victim.
-    5. Attacker dùng e_attacker, d_attacker, victim_e để tìm victim_d.
-    6. Giải mã ciphertext.
+    PP1 không phải trọng tâm chính, nhưng giữ lại để tham khảo.
     """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
@@ -306,10 +392,10 @@ def run_demo_pp1(args: argparse.Namespace) -> None:
         n_bits = n.bit_length()
 
         raise ValueError(
-            "Message hiện tại quá lớn so với modulus n.\n"
-            f"- message_int có khoảng {message_bits} bit\n"
-            f"- n có khoảng {n_bits} bit\n"
-            "Cách sửa: tăng --bits hoặc dùng message ngắn hơn.\n"
+            "Bản rõ hiện tại quá lớn so với modulus N.\n"
+            f"- Bản rõ dạng số nguyên có khoảng {message_bits} bit\n"
+            f"- N có khoảng {n_bits} bit\n"
+            "Cách sửa: tăng --bits hoặc dùng bản rõ ngắn hơn.\n"
             'Ví dụ: python -m src.main demo-pp1 --message "HELLO" --bits 512'
         ) from exc
 
@@ -367,6 +453,7 @@ def run_demo_pp1(args: argparse.Namespace) -> None:
             "attacker_e": attacker_e,
             "attacker_d": attacker_d,
         },
+        "trace": trace,
         "recovered_victim_d": recovered_victim_d,
         "recovered_m": recovered_m,
         "recovered_text": recovered_text,
@@ -377,66 +464,36 @@ def run_demo_pp1(args: argparse.Namespace) -> None:
     save_demo_json(args.save_json, demo_json)
 
 
-def run_attack_pp2(args: argparse.Namespace) -> None:
-    """
-    Chạy attack thủ công PP2.
-
-    Người dùng nhập:
-        n, e1, e2, c1, c2
-    """
-    timings: dict[str, float] = {}
-
-    print_title("ATTACK THỦ CÔNG PP2: KHÔI PHỤC BẢN RÕ TỪ C1, C2")
-
-    start = time.perf_counter()
-    recovered_m, trace = common_modulus_attack_pp2(
-        c1=args.c1,
-        c2=args.c2,
-        e1=args.e1,
-        e2=args.e2,
-        n=args.n,
-    )
-    timings["Common Modulus Attack PP2"] = time.perf_counter() - start
-
-    recovered_text: str | None = None
-
-    if args.decode_text:
-        recovered_text = recover_text_safely(recovered_m)
-
-    if args.output_file is not None:
-        write_recovered_output_file(
-            output_file=args.output_file,
-            recovered_m=recovered_m,
-            length=args.output_length,
-        )
-
-    print_attack_trace(trace)
-    print_manual_attack_result(
-        recovered_m=recovered_m,
-        recovered_text=recovered_text,
-        output_file=args.output_file,
-    )
-    print_timing_info(timings)
-
-
 def run_attack_pp1(args: argparse.Namespace) -> None:
     """
     Chạy attack thủ công PP1.
 
-    Người dùng nhập:
-        n, ciphertext, victim_e, attacker_e, attacker_d
+    PP1 không phải trọng tâm chính, nhưng giữ lại để tham khảo.
     """
     timings: dict[str, float] = {}
+    total_start = time.perf_counter()
 
     print_title("ATTACK THỦ CÔNG PP1: KHÔI PHỤC PRIVATE EXPONENT CỦA VICTIM")
 
+    n = prompt_int_if_missing(args.n, "Nhập modulus N")
+    ciphertext = prompt_int_if_missing(args.ciphertext, "Nhập bản mã C")
+    victim_e = prompt_int_if_missing(args.victim_e, "Nhập public exponent của victim")
+    attacker_e = prompt_int_if_missing(
+        args.attacker_e,
+        "Nhập public exponent của attacker",
+    )
+    attacker_d = prompt_int_if_missing(
+        args.attacker_d,
+        "Nhập private exponent của attacker",
+    )
+
     start = time.perf_counter()
     recovered_victim_d, recovered_m, trace = common_modulus_attack_pp1(
-        ciphertext=args.ciphertext,
-        victim_e=args.victim_e,
-        attacker_e=args.attacker_e,
-        attacker_d=args.attacker_d,
-        n=args.n,
+        ciphertext=ciphertext,
+        victim_e=victim_e,
+        attacker_e=attacker_e,
+        attacker_d=attacker_d,
+        n=n,
     )
     timings["Common Modulus Attack PP1"] = time.perf_counter() - start
 
@@ -459,12 +516,32 @@ def run_attack_pp1(args: argparse.Namespace) -> None:
         recovered_d=recovered_victim_d,
         output_file=args.output_file,
     )
+
+    timings["Tổng thời gian"] = time.perf_counter() - total_start
     print_timing_info(timings)
+
+    manual_json = {
+        "mode": "manual-pp1",
+        "input": {
+            "n": n,
+            "ciphertext": ciphertext,
+            "victim_e": victim_e,
+            "attacker_e": attacker_e,
+            "attacker_d": attacker_d,
+        },
+        "trace": trace,
+        "recovered_victim_d": recovered_victim_d,
+        "recovered_m": recovered_m,
+        "recovered_text": recovered_text,
+        "timings": timings,
+    }
+
+    save_demo_json(args.save_json, manual_json)
 
 
 def add_demo_arguments(parser: argparse.ArgumentParser) -> None:
     """
-    Thêm argument chung cho demo-pp1 và demo-pp2.
+    Thêm argument chung cho auto/demo-pp1/demo-pp2.
     """
     message_group = parser.add_mutually_exclusive_group()
 
@@ -472,21 +549,21 @@ def add_demo_arguments(parser: argparse.ArgumentParser) -> None:
         "--message",
         type=str,
         default=DEFAULT_MESSAGE,
-        help=f"Message text để demo. Mặc định: {DEFAULT_MESSAGE!r}",
+        help=f"Bản rõ dạng text để demo. Mặc định: {DEFAULT_MESSAGE!r}",
     )
 
     message_group.add_argument(
         "--file",
         type=str,
         default=None,
-        help="Đường dẫn file đầu vào để demo. Lưu ý file phải đủ nhỏ để m < n.",
+        help="Đường dẫn file đầu vào để demo. Lưu ý file phải đủ nhỏ để M < N.",
     )
 
     parser.add_argument(
         "--bits",
         type=int,
         default=512,
-        help="Độ dài mong muốn của modulus n. Mặc định: 512.",
+        help="Độ dài mong muốn của modulus N. Mặc định: 512.",
     )
 
     parser.add_argument(
@@ -508,11 +585,23 @@ def add_output_arguments(parser: argparse.ArgumentParser) -> None:
     """
     Thêm argument output chung cho attack thủ công.
     """
-    parser.add_argument(
+    decode_group = parser.add_mutually_exclusive_group()
+
+    decode_group.add_argument(
         "--decode-text",
+        dest="decode_text",
         action="store_true",
         help="Thử decode recovered M về text UTF-8.",
     )
+
+    decode_group.add_argument(
+        "--no-decode-text",
+        dest="decode_text",
+        action="store_false",
+        help="Không decode recovered M về text UTF-8.",
+    )
+
+    parser.set_defaults(decode_text=True)
 
     parser.add_argument(
         "--output-file",
@@ -528,43 +617,53 @@ def add_output_arguments(parser: argparse.ArgumentParser) -> None:
         help="Số byte khi ghi output-file. Hữu ích nếu dữ liệu gốc có byte 0 ở đầu.",
     )
 
+    parser.add_argument(
+        "--save-json",
+        type=str,
+        default=None,
+        help="Nếu truyền, chương trình sẽ lưu trace tấn công ra JSON.",
+    )
 
-def add_attack_pp2_arguments(parser: argparse.ArgumentParser) -> None:
+
+def add_manual_pp2_arguments(parser: argparse.ArgumentParser) -> None:
     """
-    Thêm argument cho attack PP2.
+    Thêm argument cho chế độ thủ công PP2.
+
+    Các giá trị không bắt buộc ở CLI.
+    Nếu thiếu, chương trình sẽ hỏi bằng Prompt.
     """
     parser.add_argument(
         "--n",
         type=parse_int,
-        required=True,
+        default=None,
         help="Modulus RSA dùng chung.",
     )
 
     parser.add_argument(
         "--e1",
         type=parse_int,
-        required=True,
+        default=None,
         help="Public exponent thứ nhất.",
     )
 
     parser.add_argument(
         "--e2",
         type=parse_int,
-        required=True,
+        default=None,
         help="Public exponent thứ hai.",
     )
 
     parser.add_argument(
         "--c1",
         type=parse_int,
-        required=True,
+        default=None,
         help="Ciphertext thứ nhất.",
     )
 
     parser.add_argument(
         "--c2",
         type=parse_int,
-        required=True,
+        default=None,
         help="Ciphertext thứ hai.",
     )
 
@@ -574,18 +673,21 @@ def add_attack_pp2_arguments(parser: argparse.ArgumentParser) -> None:
 def add_attack_pp1_arguments(parser: argparse.ArgumentParser) -> None:
     """
     Thêm argument cho attack PP1.
+
+    Các giá trị không bắt buộc ở CLI.
+    Nếu thiếu, chương trình sẽ hỏi bằng Prompt.
     """
     parser.add_argument(
         "--n",
         type=parse_int,
-        required=True,
+        default=None,
         help="Modulus RSA dùng chung.",
     )
 
     parser.add_argument(
         "--ciphertext",
         type=parse_int,
-        required=True,
+        default=None,
         help="Ciphertext cần giải.",
     )
 
@@ -593,7 +695,7 @@ def add_attack_pp1_arguments(parser: argparse.ArgumentParser) -> None:
         "--victim-e",
         dest="victim_e",
         type=parse_int,
-        required=True,
+        default=None,
         help="Public exponent của victim.",
     )
 
@@ -601,7 +703,7 @@ def add_attack_pp1_arguments(parser: argparse.ArgumentParser) -> None:
         "--attacker-e",
         dest="attacker_e",
         type=parse_int,
-        required=True,
+        default=None,
         help="Public exponent của attacker.",
     )
 
@@ -609,7 +711,7 @@ def add_attack_pp1_arguments(parser: argparse.ArgumentParser) -> None:
         "--attacker-d",
         dest="attacker_d",
         type=parse_int,
-        required=True,
+        default=None,
         help="Private exponent của attacker.",
     )
 
@@ -630,44 +732,58 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
     )
 
+    auto_parser = subparsers.add_parser(
+        "auto",
+        help="Chế độ tự động PP2: tự sinh dữ liệu, mã hóa C1/C2 và khôi phục bản rõ.",
+    )
+    add_demo_arguments(auto_parser)
+    auto_parser.set_defaults(func=run_auto_demo_pp2)
+
+    manual_parser = subparsers.add_parser(
+        "manual",
+        help="Chế độ thủ công PP2: nhập N, e1, e2, C1, C2 rồi khôi phục bản rõ.",
+    )
+    add_manual_pp2_arguments(manual_parser)
+    manual_parser.set_defaults(func=run_manual_attack_pp2)
+
     demo_parser = subparsers.add_parser(
         "demo",
-        help="Alias của demo-pp2. Chạy demo PP2 tự động.",
+        help="Alias của auto. Chạy demo PP2 tự động.",
     )
     add_demo_arguments(demo_parser)
-    demo_parser.set_defaults(func=run_demo_pp2)
+    demo_parser.set_defaults(func=run_auto_demo_pp2)
 
     demo_pp2_parser = subparsers.add_parser(
         "demo-pp2",
-        help="Chạy demo PP2: dùng C1, C2, e1, e2 để khôi phục bản rõ.",
+        help="Alias của auto. Chạy demo PP2 tự động.",
     )
     add_demo_arguments(demo_pp2_parser)
-    demo_pp2_parser.set_defaults(func=run_demo_pp2)
+    demo_pp2_parser.set_defaults(func=run_auto_demo_pp2)
+
+    attack_parser = subparsers.add_parser(
+        "attack",
+        help="Alias của manual. Chạy attack PP2 thủ công.",
+    )
+    add_manual_pp2_arguments(attack_parser)
+    attack_parser.set_defaults(func=run_manual_attack_pp2)
+
+    attack_pp2_parser = subparsers.add_parser(
+        "attack-pp2",
+        help="Alias của manual. Chạy attack PP2 thủ công.",
+    )
+    add_manual_pp2_arguments(attack_pp2_parser)
+    attack_pp2_parser.set_defaults(func=run_manual_attack_pp2)
 
     demo_pp1_parser = subparsers.add_parser(
         "demo-pp1",
-        help="Chạy demo PP1: dùng khóa attacker để tìm private exponent của victim.",
+        help="Chạy demo PP1 phụ: dùng khóa attacker để tìm private exponent của victim.",
     )
     add_demo_arguments(demo_pp1_parser)
     demo_pp1_parser.set_defaults(func=run_demo_pp1)
 
-    attack_parser = subparsers.add_parser(
-        "attack",
-        help="Alias của attack-pp2. Chạy attack PP2 thủ công.",
-    )
-    add_attack_pp2_arguments(attack_parser)
-    attack_parser.set_defaults(func=run_attack_pp2)
-
-    attack_pp2_parser = subparsers.add_parser(
-        "attack-pp2",
-        help="Chạy attack PP2 thủ công với n, e1, e2, c1, c2.",
-    )
-    add_attack_pp2_arguments(attack_pp2_parser)
-    attack_pp2_parser.set_defaults(func=run_attack_pp2)
-
     attack_pp1_parser = subparsers.add_parser(
         "attack-pp1",
-        help="Chạy attack PP1 thủ công với n, victim_e, attacker_e, attacker_d, ciphertext.",
+        help="Chạy attack PP1 phụ với N, victim_e, attacker_e, attacker_d, ciphertext.",
     )
     add_attack_pp1_arguments(attack_pp1_parser)
     attack_pp1_parser.set_defaults(func=run_attack_pp1)
@@ -684,6 +800,16 @@ def main() -> None:
 
     try:
         args.func(args)
+    except KeyboardInterrupt:
+        console.print()
+        console.print(
+            Panel(
+                "Đã hủy chương trình theo yêu cầu người dùng.",
+                title="Dừng chương trình",
+                border_style="yellow",
+            )
+        )
+        raise SystemExit(130)
     except Exception as exc:
         console.print()
         console.print(

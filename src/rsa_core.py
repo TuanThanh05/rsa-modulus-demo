@@ -1,8 +1,8 @@
 from sympy import randprime
 
-from .number_theory import gcd
-from .number_theory import is_coprime
-from .number_theory import mod_inverse
+from number_theory import gcd
+from number_theory import is_coprime
+from number_theory import mod_inverse
 
 
 def generate_prime(bits: int) -> int:

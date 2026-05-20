@@ -24,18 +24,6 @@ from pathlib import Path
 
 
 def bytes_to_int(data: bytes) -> int:
-    """
-    Chuyển dữ liệu bytes thành số nguyên.
-
-    Args:
-        data: Dữ liệu dạng bytes.
-
-    Returns:
-        int: Số nguyên biểu diễn dữ liệu bytes.
-
-    Example:
-        bytes_to_int(b"ABC") -> 4276803
-    """
     if not isinstance(data, bytes):
         raise TypeError("data phải có kiểu bytes")
 
