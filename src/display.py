@@ -1,19 +1,3 @@
-"""
-display.py
-
-Các hàm hiển thị dữ liệu demo RSA Common Modulus Attack ra terminal.
-
-File này không thực hiện tính toán mật mã chính.
-File này nhận dữ liệu đã có từ:
-- rsa_core.py
-- common_modulus_attack.py
-- file_codec.py
-
-rồi in ra màn hình cho dễ quan sát.
-
-Dùng thư viện rich để terminal nhìn rõ ràng hơn.
-"""
-
 from __future__ import annotations
 
 from typing import Any
@@ -188,29 +172,6 @@ def print_encryption_info(
         f"C2 = M^{e2} mod N"
     )
     print_formula("Công thức mã hóa", formula_text)
-
-
-def print_pp1_encryption_info(
-    message_int: int,
-    ciphertext: int,
-    victim_e: int,
-    n: int,
-) -> None:
-    print_rule("[4] Mã hóa bản rõ bằng public key của victim")
-
-    table = make_table("[4] Mã hóa bản rõ bằng public key của victim")
-
-    table.add_column("Công thức", style="cyan", overflow="fold", no_wrap=False)
-    table.add_column("Kết quả", style="white", overflow="fold", no_wrap=False)
-
-    formula = f"C = M^{victim_e} mod N"
-
-    table.add_row("M", format_int(message_int))
-    table.add_row("N", format_int(n))
-    table.add_row("victim_e", format_int(victim_e))
-    table.add_row(formula, format_int(ciphertext))
-
-    console.print(table)
 
 
 def print_attack_inputs_pp2(trace: dict[str, Any]) -> None:
@@ -478,146 +439,14 @@ def print_attack_trace_pp2(trace: dict[str, Any]) -> None:
     print_recovery_step_pp2(trace)
 
 
-def print_attack_inputs_pp1(trace: dict[str, Any]) -> None:
-    print_rule("[5] Dữ liệu attacker biết - PP1")
-
-    table = make_table("[5] Dữ liệu attacker biết - PP1")
-
-    table.add_column("Tên", style="cyan", overflow="fold", no_wrap=False)
-    table.add_column("Giá trị", style="white", overflow="fold", no_wrap=False)
-    table.add_column("Ý nghĩa", style="green", overflow="fold", no_wrap=False)
-
-    table.add_row("N", format_int(trace["n"]), "Modulus dùng chung")
-    table.add_row("ciphertext", format_int(trace["ciphertext"]), "Bản mã cần giải")
-    table.add_row(
-        "victim_e",
-        format_int(trace["victim_e"]),
-        "Public exponent của victim",
-    )
-    table.add_row(
-        "attacker_e",
-        format_int(trace["attacker_e"]),
-        "Public exponent của attacker",
-    )
-    table.add_row(
-        "attacker_d",
-        format_int(trace["attacker_d"]),
-        "Private exponent của attacker",
-    )
-
-    console.print(table)
-
-
-def print_pp1_t_step(trace: dict[str, Any]) -> None:
-    print_rule("[6] Đặt t trong PP1")
-
-    attacker_e = trace["attacker_e"]
-    attacker_d = trace["attacker_d"]
-    initial_t = trace["initial_t"]
-
-    table = make_table("[6] Đặt t = attacker_e × attacker_d - 1")
-
-    table.add_column("Biểu thức", style="cyan", overflow="fold", no_wrap=False)
-    table.add_column("Giá trị", style="white", overflow="fold", no_wrap=False)
-
-    table.add_row("attacker_e", format_int(attacker_e))
-    table.add_row("attacker_d", format_int(attacker_d))
-    table.add_row("t = attacker_e × attacker_d - 1", format_int(initial_t))
-
-    console.print(table)
-
-
-def print_pp1_steps(trace: dict[str, Any]) -> None:
-    print_rule("[7] Tìm private exponent của victim")
-
-    table = make_table("[7] Tìm private exponent của victim")
-
-    table.add_column("Lần", style="cyan", overflow="fold")
-    table.add_column("current_t", style="white", overflow="fold", no_wrap=False)
-    table.add_column("gcd(current_t, victim_e)", style="yellow", overflow="fold")
-    table.add_column("r", style="magenta", overflow="fold", no_wrap=False)
-    table.add_column("s", style="magenta", overflow="fold", no_wrap=False)
-    table.add_column("r × t + s × e", style="green", overflow="fold", no_wrap=False)
-    table.add_column("next_t / result", style="white", overflow="fold", no_wrap=False)
-
-    steps = trace["steps"]
-
-    for step in steps:
-        iteration = step["iteration"]
-        current_t = step["current_t"]
-        gcd_value = step["gcd_current_t_victim_e"]
-        r = step["bezout_r"]
-        s = step["bezout_s"]
-        bezout_check = step["bezout_check"]
-
-        if "recovered_victim_d" in step:
-            result_text = f"d_victim = {format_int(step['recovered_victim_d'])}"
-        else:
-            result_text = f"next_t = {format_int(step['next_t'])}"
-
-        table.add_row(
-            format_int(iteration),
-            format_int(current_t),
-            format_int(gcd_value),
-            format_int(r),
-            format_int(s),
-            format_int(bezout_check),
-            result_text,
-        )
-
-    console.print(table)
-
-
-def print_recovery_step_pp1(trace: dict[str, Any]) -> None:
-    print_rule("[8] Giải mã bằng private exponent khôi phục được - PP1")
-
-    ciphertext = trace["ciphertext"]
-    n = trace["n"]
-    recovered_victim_d = trace["recovered_victim_d"]
-    recovered_m = trace["recovered_m"]
-
-    table = make_table("[8] Giải mã bằng private exponent khôi phục được - PP1")
-
-    table.add_column("Công thức", style="cyan", overflow="fold", no_wrap=False)
-    table.add_column("Giá trị", style="white", overflow="fold", no_wrap=False)
-
-    table.add_row("recovered_victim_d", format_int(recovered_victim_d))
-    table.add_row("ciphertext", format_int(ciphertext))
-    table.add_row("N", format_int(n))
-    table.add_row("M = ciphertext^recovered_victim_d mod N", format_int(recovered_m))
-
-    console.print(table)
-
-    formula_text = (
-        "M = ciphertext^recovered_victim_d mod N\n\n"
-        f"M = {ciphertext}^{recovered_victim_d} mod {n}\n"
-        f"M = {recovered_m}"
-    )
-
-    print_formula("Công thức khôi phục PP1", formula_text)
-
-
-def print_attack_trace_pp1(trace: dict[str, Any]) -> None:
-    print_title(trace["attack_name"])
-
-    print_attack_inputs_pp1(trace)
-    print_pp1_t_step(trace)
-    print_pp1_steps(trace)
-    print_recovery_step_pp1(trace)
-
-
 def print_attack_trace(trace: dict[str, Any]) -> None:
     attack_method = trace.get("attack_method")
-
-    if attack_method == "PP1":
-        print_attack_trace_pp1(trace)
-        return
 
     if attack_method == "PP2":
         print_attack_trace_pp2(trace)
         return
 
-    raise ValueError("Không nhận diện được attack_method trong trace")
+    raise ValueError("Chương trình hiện chỉ hỗ trợ attack_method = PP2")
 
 
 def print_final_result(
@@ -655,7 +484,6 @@ def print_final_result(
 def print_manual_attack_result(
     recovered_m: int,
     recovered_text: str | None = None,
-    recovered_d: int | None = None,
     output_file: str | None = None,
 ) -> None:
     print_rule("[9] Kết quả khôi phục")
@@ -664,9 +492,6 @@ def print_manual_attack_result(
 
     table.add_column("Tên", style="cyan", overflow="fold", no_wrap=False)
     table.add_column("Giá trị", style="white", overflow="fold", no_wrap=False)
-
-    if recovered_d is not None:
-        table.add_row("Recovered victim d", format_int(recovered_d))
 
     table.add_row("Recovered M", format_int(recovered_m))
 
