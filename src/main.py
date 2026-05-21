@@ -70,14 +70,6 @@ DEFAULT_MESSAGE = "HELLO PTIT - COMMON MODULUS ATTACK DEMO"
 
 
 def parse_int(value: str) -> int:
-    """
-    Chuyển chuỗi CLI thành số nguyên.
-
-    Hỗ trợ:
-        247
-        0xf7
-        0b11110111
-    """
     try:
         return int(value, 0)
     except ValueError as exc:
@@ -87,10 +79,6 @@ def parse_int(value: str) -> int:
 
 
 def prompt_int_if_missing(value: int | None, label: str) -> int:
-    """
-    Nếu value đã có thì trả về value.
-    Nếu value chưa có thì hỏi người dùng nhập bằng Prompt.
-    """
     if value is not None:
         return value
 
@@ -100,17 +88,6 @@ def prompt_int_if_missing(value: int | None, label: str) -> int:
 
 
 def load_demo_message(args: argparse.Namespace) -> tuple[str, bytes, int]:
-    """
-    Lấy message từ --message hoặc --file.
-
-    Returns:
-        tuple:
-            (
-                message_display,
-                message_bytes,
-                message_int
-            )
-    """
     if args.file is not None:
         file_path = Path(args.file)
         message_bytes = read_file_as_bytes(file_path)
@@ -135,11 +112,6 @@ def load_demo_message(args: argparse.Namespace) -> tuple[str, bytes, int]:
 
 
 def recover_text_safely(value: int) -> str | None:
-    """
-    Thử chuyển số nguyên khôi phục về text UTF-8.
-
-    Nếu không giải mã được thì trả về None.
-    """
     try:
         text = int_to_text(value)
     except UnicodeDecodeError:
@@ -152,9 +124,6 @@ def save_demo_json(
     output_path: str | None,
     data: dict[str, Any],
 ) -> None:
-    """
-    Lưu dữ liệu demo ra JSON nếu người dùng truyền --save-json.
-    """
     if output_path is None:
         return
 
@@ -174,9 +143,6 @@ def write_recovered_output_file(
     recovered_m: int,
     length: int | None = None,
 ) -> None:
-    """
-    Ghi recovered_m ra file nếu người dùng truyền output_file.
-    """
     if output_file is None:
         return
 
@@ -187,16 +153,6 @@ def write_recovered_output_file(
 
 
 def run_auto_demo_pp2(args: argparse.Namespace) -> None:
-    """
-    Chạy chế độ tự động PP2.
-
-    Luồng:
-    1. Nhận bản rõ.
-    2. Sinh N chung và hai cặp khóa khác e.
-    3. Mã hóa cùng bản rõ thành C1, C2.
-    4. Tấn công PP2 để khôi phục M.
-    5. Hiển thị toàn bộ trace.
-    """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
 
@@ -291,13 +247,6 @@ def run_auto_demo_pp2(args: argparse.Namespace) -> None:
 
 
 def run_manual_attack_pp2(args: argparse.Namespace) -> None:
-    """
-    Chạy chế độ thủ công PP2.
-
-    Người dùng có thể nhập bằng CLI flags hoặc nhập lần lượt bằng Prompt.
-    Cần có:
-        N, e1, e2, C1, C2
-    """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
 
@@ -360,11 +309,6 @@ def run_manual_attack_pp2(args: argparse.Namespace) -> None:
 
 
 def run_demo_pp1(args: argparse.Namespace) -> None:
-    """
-    Chạy demo tự động PP1.
-
-    PP1 không phải trọng tâm chính, nhưng giữ lại để tham khảo.
-    """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
 
@@ -465,11 +409,6 @@ def run_demo_pp1(args: argparse.Namespace) -> None:
 
 
 def run_attack_pp1(args: argparse.Namespace) -> None:
-    """
-    Chạy attack thủ công PP1.
-
-    PP1 không phải trọng tâm chính, nhưng giữ lại để tham khảo.
-    """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
 
@@ -540,9 +479,6 @@ def run_attack_pp1(args: argparse.Namespace) -> None:
 
 
 def add_demo_arguments(parser: argparse.ArgumentParser) -> None:
-    """
-    Thêm argument chung cho auto/demo-pp1/demo-pp2.
-    """
     message_group = parser.add_mutually_exclusive_group()
 
     message_group.add_argument(
@@ -582,9 +518,6 @@ def add_demo_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def add_output_arguments(parser: argparse.ArgumentParser) -> None:
-    """
-    Thêm argument output chung cho attack thủ công.
-    """
     decode_group = parser.add_mutually_exclusive_group()
 
     decode_group.add_argument(
@@ -626,12 +559,6 @@ def add_output_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def add_manual_pp2_arguments(parser: argparse.ArgumentParser) -> None:
-    """
-    Thêm argument cho chế độ thủ công PP2.
-
-    Các giá trị không bắt buộc ở CLI.
-    Nếu thiếu, chương trình sẽ hỏi bằng Prompt.
-    """
     parser.add_argument(
         "--n",
         type=parse_int,
@@ -671,12 +598,6 @@ def add_manual_pp2_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def add_attack_pp1_arguments(parser: argparse.ArgumentParser) -> None:
-    """
-    Thêm argument cho attack PP1.
-
-    Các giá trị không bắt buộc ở CLI.
-    Nếu thiếu, chương trình sẽ hỏi bằng Prompt.
-    """
     parser.add_argument(
         "--n",
         type=parse_int,
@@ -719,9 +640,6 @@ def add_attack_pp1_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """
-    Tạo CLI parser cho chương trình.
-    """
     parser = argparse.ArgumentParser(
         prog="python -m src.main",
         description="RSA Common Modulus Attack Demo CLI",
@@ -792,9 +710,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    """
-    Entry point chính.
-    """
     parser = build_parser()
     args = parser.parse_args()
 

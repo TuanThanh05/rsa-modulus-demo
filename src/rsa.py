@@ -1,26 +1,3 @@
-"""
-rsa.py
-
-File kiểm thử riêng cho thuật toán RSA cơ bản.
-
-File này chỉ dùng để kiểm tra:
-- Sinh khóa RSA
-- Chuyển bản rõ sang số nguyên
-- Mã hóa RSA
-- Giải mã RSA
-- So sánh bản rõ ban đầu và bản rõ khôi phục
-
-Chạy từ thư mục gốc project:
-
-    python -m src.rsa auto --message "HELLO PTIT" --bits 1024
-
-    python -m src.rsa manual --p 61 --q 53 --e 17 --message "A"
-
-    python -m src.rsa manual --n 3233 --e 17 --d 2753 --message "A"
-
-    python -m src.rsa manual --n 3233 --d 2753 --ciphertext 2790
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -78,14 +55,6 @@ DEFAULT_MESSAGE = "HELLO PTIT - RSA TEST"
 
 
 def parse_int(value: str) -> int:
-    """
-    Chuyển chuỗi nhập vào thành số nguyên.
-
-    Hỗ trợ:
-    - Số thập phân: 3233
-    - Số hex: 0xca1
-    - Số nhị phân: 0b110010100001
-    """
     try:
         return int(value, 0)
     except ValueError as exc:
@@ -95,10 +64,6 @@ def parse_int(value: str) -> int:
 
 
 def prompt_int_if_missing(value: int | None, label: str) -> int:
-    """
-    Nếu đã có giá trị thì dùng luôn.
-    Nếu chưa có thì hỏi người dùng nhập.
-    """
     if value is not None:
         return value
 
@@ -108,18 +73,10 @@ def prompt_int_if_missing(value: int | None, label: str) -> int:
 
 
 def format_value(value: Any) -> str:
-    """
-    Chuyển giá trị sang chuỗi để hiển thị.
-
-    Không rút gọn số lớn.
-    """
     return str(value)
 
 
 def make_table(title: str) -> Table:
-    """
-    Tạo bảng rich mặc định.
-    """
     return Table(
         title=title,
         show_lines=True,
@@ -128,9 +85,6 @@ def make_table(title: str) -> Table:
 
 
 def print_title(title: str) -> None:
-    """
-    In tiêu đề chính.
-    """
     console.print()
     console.print(
         Panel(
@@ -142,17 +96,11 @@ def print_title(title: str) -> None:
 
 
 def print_rule(title: str) -> None:
-    """
-    In đường phân cách.
-    """
     console.print()
     console.print(Rule(title, style="cyan"))
 
 
 def print_formula(title: str, formula: str) -> None:
-    """
-    In công thức dạng text.
-    """
     console.print()
     console.print(
         Panel(
@@ -164,11 +112,6 @@ def print_formula(title: str, formula: str) -> None:
 
 
 def safe_int_to_text(value: int) -> str | None:
-    """
-    Thử chuyển số nguyên về text UTF-8.
-
-    Nếu không decode được thì trả về None.
-    """
     try:
         return int_to_text(value)
     except UnicodeDecodeError:
@@ -176,14 +119,6 @@ def safe_int_to_text(value: int) -> str | None:
 
 
 def load_plaintext_from_args(args: argparse.Namespace) -> tuple[str, bytes, int]:
-    """
-    Lấy bản rõ từ --m, --message hoặc --file.
-
-    Trả về:
-    - message_display
-    - message_bytes
-    - message_int
-    """
     if args.m is not None:
         message_int = args.m
         message_bytes = b""
@@ -218,9 +153,6 @@ def load_plaintext_from_args(args: argparse.Namespace) -> tuple[str, bytes, int]
 
 
 def print_modulus_step(modulus_info: dict[str, int]) -> None:
-    """
-    In bước sinh p, q, N, phi.
-    """
     print_rule("[1] Tham số modulus RSA")
 
     table = make_table("[1] Tham số modulus RSA")
@@ -255,9 +187,6 @@ def print_modulus_step(modulus_info: dict[str, int]) -> None:
 
 
 def print_key_step(n: int, e: int, d: int, phi: int | None = None) -> None:
-    """
-    In khóa công khai và khóa bí mật.
-    """
     print_rule("[2] Khóa RSA")
 
     table = make_table("[2] Khóa RSA")
@@ -289,9 +218,6 @@ def print_plaintext_step(
     message_int: int,
     n: int,
 ) -> None:
-    """
-    In bước chuyển bản rõ sang số nguyên.
-    """
     print_rule("[3] Chuyển bản rõ sang số nguyên")
 
     table = make_table("[3] Chuyển bản rõ sang số nguyên")
@@ -316,9 +242,6 @@ def print_plaintext_step(
 
 
 def print_encrypt_step(m: int, e: int, n: int, c: int) -> None:
-    """
-    In bước mã hóa RSA.
-    """
     print_rule("[4] Mã hóa RSA")
 
     table = make_table("[4] Mã hóa RSA")
@@ -344,9 +267,6 @@ def print_encrypt_step(m: int, e: int, n: int, c: int) -> None:
 
 
 def print_decrypt_step(c: int, d: int, n: int, recovered_m: int) -> None:
-    """
-    In bước giải mã RSA.
-    """
     print_rule("[5] Giải mã RSA")
 
     table = make_table("[5] Giải mã RSA")
@@ -379,9 +299,6 @@ def print_final_step(
     recovered_m: int,
     recovered_text: str | None,
 ) -> None:
-    """
-    In kết quả cuối cùng.
-    """
     print_rule("[6] Kết quả kiểm tra RSA")
 
     table = make_table("[6] Kết quả kiểm tra RSA")
@@ -413,9 +330,6 @@ def print_final_step(
 
 
 def print_timing_step(timings: dict[str, float]) -> None:
-    """
-    In thời gian xử lý.
-    """
     print_rule("[7] Thời gian xử lý")
 
     table = make_table("[7] Thời gian xử lý")
@@ -430,9 +344,6 @@ def print_timing_step(timings: dict[str, float]) -> None:
 
 
 def run_auto(args: argparse.Namespace) -> None:
-    """
-    Chạy kiểm thử RSA tự động.
-    """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
 
@@ -485,13 +396,6 @@ def run_auto(args: argparse.Namespace) -> None:
 
 
 def build_manual_key(args: argparse.Namespace) -> tuple[dict[str, int], int, int, int, int | None]:
-    """
-    Tạo thông tin khóa cho chế độ thủ công.
-
-    Có hai cách:
-    - Nhập p, q, e: chương trình tự tính N, φ(N), d.
-    - Nhập N, e, d: chương trình dùng trực tiếp khóa đã có.
-    """
     if args.p is not None or args.q is not None:
         p = prompt_int_if_missing(args.p, "Nhập số nguyên tố p")
         q = prompt_int_if_missing(args.q, "Nhập số nguyên tố q")
@@ -522,9 +426,6 @@ def build_manual_key(args: argparse.Namespace) -> tuple[dict[str, int], int, int
 
 
 def run_manual(args: argparse.Namespace) -> None:
-    """
-    Chạy kiểm thử RSA thủ công.
-    """
     timings: dict[str, float] = {}
     total_start = time.perf_counter()
 
@@ -579,9 +480,6 @@ def run_manual(args: argparse.Namespace) -> None:
 
 
 def add_plaintext_arguments(parser: argparse.ArgumentParser) -> None:
-    """
-    Thêm tham số nhập bản rõ.
-    """
     plaintext_group = parser.add_mutually_exclusive_group()
 
     plaintext_group.add_argument(
@@ -607,9 +505,6 @@ def add_plaintext_arguments(parser: argparse.ArgumentParser) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    """
-    Tạo parser CLI.
-    """
     parser = argparse.ArgumentParser(
         prog="python -m src.rsa",
         description="File kiểm thử RSA cơ bản: sinh khóa, mã hóa, giải mã.",
@@ -687,9 +582,6 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main() -> None:
-    """
-    Entry point chính.
-    """
     parser = build_parser()
     args = parser.parse_args()
 

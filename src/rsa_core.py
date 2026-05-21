@@ -21,7 +21,7 @@ def generate_prime(bits: int) -> int:
 
 def generate_shared_modulus(bits: int) -> dict[str, int]:
     if bits < 16:
-        raise ValueError("bits nên >= 16. Demo nhỏ quá dễ lỗi và không đại diện RSA.")
+        raise ValueError("bits nên >= 16 nhỏ quá dễ lỗi và không đại diện RSA.")
 
     p_bits = bits // 2
     q_bits = bits - p_bits
@@ -46,65 +46,45 @@ def generate_shared_modulus(bits: int) -> dict[str, int]:
     return modulus_info
 
 
-def choose_public_exponent(
-    phi: int,
-    avoid: set[int] | None = None,
-    coprime_with: set[int] | None = None,
-) -> int:
+def choose_public_exponent(phi: int, avoid: set[int] | None = None, coprime_with: set[int] | None = None,) -> int:
     if phi <= 3:
         raise ValueError("phi quá nhỏ, không chọn được public exponent hợp lệ")
-
     if avoid is None:
         avoid = set()
-
     if coprime_with is None:
         coprime_with = set()
-
     common_candidates = [65537, 257, 17, 13, 11, 7, 5, 3]
-
     for e in common_candidates:
         if e in avoid:
             continue
-
         if not (1 < e < phi):
             continue
-
         if not is_coprime(e, phi):
             continue
-
         is_valid_with_other_exponents = True
 
         for other_e in coprime_with:
             if not is_coprime(e, other_e):
                 is_valid_with_other_exponents = False
                 break
-
         if is_valid_with_other_exponents:
             return e
-
     e = 3
-
     while e < phi:
         if e in avoid:
             e = e + 2
             continue
-
         if not is_coprime(e, phi):
             e = e + 2
             continue
-
         is_valid_with_other_exponents = True
-
         for other_e in coprime_with:
             if not is_coprime(e, other_e):
                 is_valid_with_other_exponents = False
                 break
-
         if is_valid_with_other_exponents:
             return e
-
         e = e + 2
-
     raise ValueError("Không tìm được public exponent hợp lệ")
 
 
@@ -125,7 +105,7 @@ def generate_rsa_key_with_shared_n(
     gcd_result = gcd(e, phi)
 
     if gcd_result != 1:
-        raise ValueError("e không hợp lệ vì gcd(e, phi) != 1")
+        raise ValueError("e không hợp lệ do không là số nguyên tố cùng nhau với phi")
 
     d = mod_inverse(e, phi)
 

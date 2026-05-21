@@ -1,21 +1,3 @@
-"""
-common_modulus_attack.py
-
-Các hàm thực hiện RSA Common Modulus Attack.
-
-PP1:
-- Attacker có public exponent và private exponent của chính mình.
-- Attacker dùng các giá trị đó để tìm private exponent tương đương của victim.
-
-PP2:
-- Cùng một bản rõ M được mã hóa thành C1, C2.
-- Hai bản mã dùng chung modulus n nhưng có hai public exponent e1, e2 khác nhau.
-- Nếu gcd(e1, e2) = 1 thì dùng Extended Euclidean Algorithm để tìm a, b:
-      a * e1 + b * e2 = 1
-- Sau đó khôi phục:
-      M = C1^a * C2^b mod n
-"""
-
 from .number_theory import extended_gcd
 from .number_theory import gcd
 from .number_theory import mod_inverse
@@ -28,19 +10,6 @@ def validate_attack_inputs_pp2(
     e2: int,
     n: int,
 ) -> None:
-    """
-    Kiểm tra dữ liệu đầu vào cho Common Modulus Attack PP2.
-
-    Args:
-        c1: Bản mã thứ nhất.
-        c2: Bản mã thứ hai.
-        e1: Public exponent thứ nhất.
-        e2: Public exponent thứ hai.
-        n: Modulus RSA dùng chung.
-
-    Returns:
-        None
-    """
     if n <= 1:
         raise ValueError("n phải là số nguyên lớn hơn 1")
 
@@ -67,19 +36,6 @@ def validate_attack_inputs_pp1(
     attacker_d: int,
     n: int,
 ) -> None:
-    """
-    Kiểm tra dữ liệu đầu vào cho Common Modulus Attack PP1.
-
-    Args:
-        ciphertext: Bản mã được mã hóa bằng public key của victim.
-        victim_e: Public exponent của victim.
-        attacker_e: Public exponent của attacker.
-        attacker_d: Private exponent của attacker.
-        n: Modulus RSA dùng chung.
-
-    Returns:
-        None
-    """
     if n <= 1:
         raise ValueError("n phải là số nguyên lớn hơn 1")
 
@@ -100,27 +56,6 @@ def validate_attack_inputs_pp1(
 
 
 def handle_negative_power(c: int, exponent: int, n: int) -> int:
-    """
-    Tính C^exponent mod n, kể cả khi exponent âm.
-
-    Nếu exponent >= 0:
-        result = C^exponent mod n
-
-    Nếu exponent < 0:
-        C^exponent mod n
-        = (C^-1)^abs(exponent) mod n
-
-    Args:
-        c: Cơ số, thường là bản mã C.
-        exponent: Số mũ, có thể âm.
-        n: Modulus.
-
-    Returns:
-        int: Kết quả lũy thừa modulo.
-
-    Raises:
-        ValueError: Nếu exponent âm nhưng c không có nghịch đảo modulo n.
-    """
     if n <= 1:
         raise ValueError("n phải là số nguyên lớn hơn 1")
 
@@ -150,22 +85,6 @@ def compute_signed_power_with_trace(
     n: int,
     label: str,
 ) -> tuple[int, dict[str, int | str | bool]]:
-    """
-    Tính C^exponent mod n và lưu trace để hiển thị từng bước.
-
-    Args:
-        c: Bản mã hoặc cơ số cần tính.
-        exponent: Số mũ, có thể âm.
-        n: Modulus.
-        label: Nhãn hiển thị, ví dụ "C1" hoặc "C2".
-
-    Returns:
-        tuple:
-            (
-                result,
-                trace
-            )
-    """
     if exponent >= 0:
         result = pow(c, exponent, n)
 
@@ -206,35 +125,6 @@ def common_modulus_attack_pp1(
     attacker_d: int,
     n: int,
 ) -> tuple[int, int, dict]:
-    """
-    Thực hiện Common Modulus Attack PP1.
-
-    Ý tưởng:
-        attacker_e * attacker_d - 1 là một bội của phi(n).
-
-    Đặt:
-        t = attacker_e * attacker_d - 1
-
-    Sau đó tìm số mũ bí mật tương đương của victim dựa trên:
-        victim_e * victim_d ≡ 1 mod t
-
-    Nếu gcd(t, victim_e) != 1 thì chia t cho gcd đó rồi thử lại.
-
-    Args:
-        ciphertext: Bản mã được mã hóa bằng public key của victim.
-        victim_e: Public exponent của victim.
-        attacker_e: Public exponent của attacker.
-        attacker_d: Private exponent của attacker.
-        n: Modulus dùng chung.
-
-    Returns:
-        tuple:
-            (
-                recovered_victim_d,
-                recovered_m,
-                trace
-            )
-    """
     validate_attack_inputs_pp1(
         ciphertext=ciphertext,
         victim_e=victim_e,
@@ -313,40 +203,6 @@ def common_modulus_attack_pp2(
     e2: int,
     n: int,
 ) -> tuple[int, dict]:
-    """
-    Thực hiện Common Modulus Attack PP2.
-
-    Điều kiện:
-        gcd(e1, e2) = 1
-
-    Dùng Extended Euclidean Algorithm để tìm a, b:
-        a * e1 + b * e2 = 1
-
-    Vì:
-        C1 = M^e1 mod n
-        C2 = M^e2 mod n
-
-    Suy ra:
-        C1^a * C2^b
-        = M^(a*e1) * M^(b*e2)
-        = M^(a*e1 + b*e2)
-        = M^1
-        = M mod n
-
-    Args:
-        c1: Bản mã thứ nhất.
-        c2: Bản mã thứ hai.
-        e1: Public exponent thứ nhất.
-        e2: Public exponent thứ hai.
-        n: Modulus dùng chung.
-
-    Returns:
-        tuple:
-            (
-                recovered_m,
-                trace
-            )
-    """
     validate_attack_inputs_pp2(c1, c2, e1, e2, n)
 
     gcd_e1_e2 = gcd(e1, e2)

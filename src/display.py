@@ -29,36 +29,20 @@ console = Console()
 
 
 def format_int(value: int | str | bool | None) -> str:
-    """
-    Chuyển giá trị thành chuỗi để in ra màn hình.
-
-    Lưu ý:
-    - Không rút gọn số lớn.
-    - Để rich tự xuống dòng khi số quá dài.
-    """
     return str(value)
 
 
 def print_rule(title: str) -> None:
-    """
-    In đường phân cách giữa các phần.
-    """
     console.print()
     console.print(Rule(title, style="cyan"))
 
 
 def print_formula(title: str, formula: str) -> None:
-    """
-    In công thức hoặc khối mô tả dạng text nổi bật.
-    """
     console.print()
     console.print(Panel(Syntax(formula, "text", word_wrap=True), title=title))
 
 
 def print_title(title: str) -> None:
-    """
-    In tiêu đề chính của một phần demo.
-    """
     console.print()
     console.print(
         Panel(
@@ -70,9 +54,6 @@ def print_title(title: str) -> None:
 
 
 def make_table(title: str) -> Table:
-    """
-    Tạo bảng rich mặc định cho các phần hiển thị số lớn.
-    """
     return Table(
         title=title,
         show_lines=True,
@@ -81,17 +62,11 @@ def make_table(title: str) -> Table:
 
 
 def add_name_value_columns(table: Table) -> None:
-    """
-    Thêm hai cột Tên/Giá trị có khả năng xuống dòng.
-    """
     table.add_column("Tên", style="cyan", overflow="fold", no_wrap=False)
     table.add_column("Giá trị", style="white", overflow="fold", no_wrap=False)
 
 
 def print_modulus_info(modulus_info: dict[str, int]) -> None:
-    """
-    In thông tin p, q, n, phi(n).
-    """
     print_rule("[1] Sinh modulus chung")
 
     table = make_table("[1] Sinh modulus chung N = p × q")
@@ -119,9 +94,6 @@ def print_keys_info(
     key1_label: str = "key1",
     key2_label: str = "key2",
 ) -> None:
-    """
-    In thông tin hai cặp khóa RSA dùng chung N.
-    """
     print_rule("[2] Tạo hai cặp khóa RSA dùng chung N")
 
     table = make_table("[2] Tạo hai cặp khóa RSA dùng chung modulus N")
@@ -168,9 +140,6 @@ def print_message_info(
     message_text: str,
     message_int: int,
 ) -> None:
-    """
-    In bản rõ ban đầu ở dạng text và dạng số nguyên.
-    """
     print_rule("[3] Bản rõ ban đầu")
 
     table = make_table("[3] Bản rõ ban đầu")
@@ -193,9 +162,6 @@ def print_encryption_info(
     e2: int,
     n: int,
 ) -> None:
-    """
-    In quá trình mã hóa cùng một bản rõ M bằng hai public exponent khác nhau.
-    """
     print_rule("[4] Mã hóa cùng bản rõ bằng hai public key")
 
     table = make_table("[4] Mã hóa cùng bản rõ bằng hai public key")
@@ -230,9 +196,6 @@ def print_pp1_encryption_info(
     victim_e: int,
     n: int,
 ) -> None:
-    """
-    In quá trình mã hóa bản rõ M bằng public key của victim trong PP1.
-    """
     print_rule("[4] Mã hóa bản rõ bằng public key của victim")
 
     table = make_table("[4] Mã hóa bản rõ bằng public key của victim")
@@ -251,9 +214,6 @@ def print_pp1_encryption_info(
 
 
 def print_attack_inputs_pp2(trace: dict[str, Any]) -> None:
-    """
-    In dữ liệu attacker biết trong PP2.
-    """
     print_rule("[5] Dữ liệu attacker biết - PP2")
 
     table = make_table("[5] Dữ liệu attacker biết - PP2")
@@ -272,12 +232,6 @@ def print_attack_inputs_pp2(trace: dict[str, Any]) -> None:
 
 
 def build_extended_gcd_steps(a: int, b: int) -> list[dict[str, int | str]]:
-    """
-    Tạo danh sách các bước Euclid mở rộng theo dạng dùng trong báo cáo.
-
-    Trả về các dòng gồm:
-    i, r_i_minus_2, r_i_minus_1, q, r_i, s_i, t_i, check
-    """
     steps: list[dict[str, int | str]] = []
 
     r_values = [a, b]
@@ -347,9 +301,6 @@ def build_extended_gcd_steps(a: int, b: int) -> list[dict[str, int | str]]:
 
 
 def print_extended_gcd_table_pp2(trace: dict[str, Any]) -> None:
-    """
-    In bảng Euclid mở rộng từng bước cho e1 và e2 trong PP2.
-    """
     e1 = trace["e1"]
     e2 = trace["e2"]
     steps = build_extended_gcd_steps(e1, e2)
@@ -403,9 +354,6 @@ def print_extended_gcd_table_pp2(trace: dict[str, Any]) -> None:
 
 
 def print_bezout_step_pp2(trace: dict[str, Any]) -> None:
-    """
-    In bước dùng Extended Euclidean Algorithm để tìm hệ số Bézout trong PP2.
-    """
     print_rule("[6] Kết quả hệ số Bézout")
 
     e1 = trace["e1"]
@@ -433,9 +381,6 @@ def print_bezout_step_pp2(trace: dict[str, Any]) -> None:
 
 
 def print_power_trace(power_trace: dict[str, Any]) -> None:
-    """
-    In cách xử lý một lũy thừa C^exponent mod N.
-    """
     label = power_trace["label"]
     original_base = power_trace["original_base"]
     original_exponent = power_trace["original_exponent"]
@@ -488,9 +433,6 @@ def print_power_trace(power_trace: dict[str, Any]) -> None:
 
 
 def print_recovery_step_pp2(trace: dict[str, Any]) -> None:
-    """
-    In bước khôi phục bản rõ M trong PP2.
-    """
     print_rule("[8] Khôi phục bản rõ PP2")
 
     part1 = trace["part1"]
@@ -521,9 +463,6 @@ def print_recovery_step_pp2(trace: dict[str, Any]) -> None:
 
 
 def print_attack_trace_pp2(trace: dict[str, Any]) -> None:
-    """
-    In toàn bộ quá trình Common Modulus Attack PP2.
-    """
     print_title(trace["attack_name"])
 
     print_attack_inputs_pp2(trace)
@@ -540,9 +479,6 @@ def print_attack_trace_pp2(trace: dict[str, Any]) -> None:
 
 
 def print_attack_inputs_pp1(trace: dict[str, Any]) -> None:
-    """
-    In dữ liệu attacker biết trong PP1.
-    """
     print_rule("[5] Dữ liệu attacker biết - PP1")
 
     table = make_table("[5] Dữ liệu attacker biết - PP1")
@@ -573,9 +509,6 @@ def print_attack_inputs_pp1(trace: dict[str, Any]) -> None:
 
 
 def print_pp1_t_step(trace: dict[str, Any]) -> None:
-    """
-    In bước đặt t = attacker_e * attacker_d - 1.
-    """
     print_rule("[6] Đặt t trong PP1")
 
     attacker_e = trace["attacker_e"]
@@ -595,9 +528,6 @@ def print_pp1_t_step(trace: dict[str, Any]) -> None:
 
 
 def print_pp1_steps(trace: dict[str, Any]) -> None:
-    """
-    In các vòng lặp tìm private exponent của victim trong PP1.
-    """
     print_rule("[7] Tìm private exponent của victim")
 
     table = make_table("[7] Tìm private exponent của victim")
@@ -639,9 +569,6 @@ def print_pp1_steps(trace: dict[str, Any]) -> None:
 
 
 def print_recovery_step_pp1(trace: dict[str, Any]) -> None:
-    """
-    In bước giải mã bằng private exponent khôi phục được trong PP1.
-    """
     print_rule("[8] Giải mã bằng private exponent khôi phục được - PP1")
 
     ciphertext = trace["ciphertext"]
@@ -671,9 +598,6 @@ def print_recovery_step_pp1(trace: dict[str, Any]) -> None:
 
 
 def print_attack_trace_pp1(trace: dict[str, Any]) -> None:
-    """
-    In toàn bộ quá trình Common Modulus Attack PP1.
-    """
     print_title(trace["attack_name"])
 
     print_attack_inputs_pp1(trace)
@@ -683,11 +607,6 @@ def print_attack_trace_pp1(trace: dict[str, Any]) -> None:
 
 
 def print_attack_trace(trace: dict[str, Any]) -> None:
-    """
-    In toàn bộ quá trình Common Modulus Attack từ trace.
-
-    Hàm này tự nhận diện PP1 hoặc PP2 dựa vào trace["attack_method"].
-    """
     attack_method = trace.get("attack_method")
 
     if attack_method == "PP1":
@@ -706,9 +625,6 @@ def print_final_result(
     recovered_message_int: int,
     recovered_text: str | None = None,
 ) -> None:
-    """
-    In kết quả cuối cùng của demo.
-    """
     print_rule("[9] Kết quả cuối cùng")
 
     table = make_table("[9] Kết quả cuối cùng")
@@ -742,12 +658,6 @@ def print_manual_attack_result(
     recovered_d: int | None = None,
     output_file: str | None = None,
 ) -> None:
-    """
-    In kết quả cho chế độ attack thủ công.
-
-    Ở chế độ thủ công có thể không biết original M,
-    nên không so sánh original và recovered.
-    """
     print_rule("[9] Kết quả khôi phục")
 
     table = make_table("[9] Kết quả khôi phục")
@@ -775,9 +685,6 @@ def print_manual_attack_result(
 
 
 def print_timing_info(timings: dict[str, float]) -> None:
-    """
-    In thời gian xử lý các bước chính.
-    """
     print_rule("[10] Thời gian xử lý")
 
     table = make_table("[10] Thời gian xử lý")
@@ -792,9 +699,4 @@ def print_timing_info(timings: dict[str, float]) -> None:
 
 
 def prompt_text(label: str) -> str:
-    """
-    Hàm nhập text bằng rich Prompt.
-
-    Hàm này để dùng khi cần mở rộng display/input tương tác.
-    """
     return Prompt.ask(label)
