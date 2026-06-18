@@ -58,22 +58,18 @@ Nếu `a` hoặc `b` âm, chương trình sẽ xử lý bằng nghịch đảo m
 
 ## Tính năng chính
 
-- Demo tự động toàn bộ Common Modulus Attack PP2.
+- Mã hóa RSA
+- Giải mã RSA
 - Chạy chế độ thủ công khi đã có sẵn `N`, `e1`, `e2`, `C1`, `C2`.
-- Hỗ trợ đầu vào dạng text hoặc file.
-- Có thể lưu trace ra JSON.
-- Có thể ghi dữ liệu khôi phục ra file.
-- Có thêm công cụ `src.rsa` để kiểm thử RSA cơ bản độc lập với bài toán tấn công.
+- Khôi phục bản rõ bằng phương pháp modulus số chung
 
 ## Công nghệ sử dụng
 
-| Thành phần | Vai trò                                       |
-| ---------- | --------------------------------------------- |
-| `Python`   | Ngôn ngữ chính của project                    |
-| `sympy`    | Hỗ trợ sinh số nguyên tố                      |
-| `rich`     | Hiển thị bảng, panel, công thức trên terminal |
-| `argparse` | Xử lý tham số dòng lệnh                       |
-| `json`     | Lưu trace và dữ liệu demo                     |
+|      Thành phần     |                    Vai trò                    |
+| ------------------- | --------------------------------------------- |
+| `Python`            | Ngôn ngữ chính của project                    |
+| `sympy`             | Hỗ trợ sinh số nguyên tố                      |
+| `customtkinter`     | Hiển thị giao diện trực quan rõ ràng          |
 
 ## Cấu trúc project
 
@@ -82,27 +78,36 @@ rsa-modulus-demo/
 ├── README.md
 ├── requirements.txt
 └── src/
-    ├── __init__.py
-    ├── common_modulus_attack.py
-    ├── display.py
-    ├── file_codec.py
     ├── main.py
-    ├── number_theory.py
-    ├── rsa.py
-    └── rsa_core.py
+    ├── Attack_rsa_core/
+    │   └── common_modulus_attack.py
+    ├── Display/
+    │   ├── __init__.py
+    │   ├── attackui.py
+    │   └── cipherui.py
+    ├── File_code/
+    │   └── file_codec.py
+    ├── Number_theory/
+    │   └── number_theory.py
+    ├── Rsa_core/
+    │   └── rsa_core.py
+    └── Validate/
+        └── validate_attack.py
 ```
 
 ## Vai trò từng file
 
-| File                           | Vai trò                                                            |
-| ------------------------------ | ------------------------------------------------------------------ |
-| `src/main.py`                  | CLI chính cho Common Modulus Attack PP2                            |
-| `src/common_modulus_attack.py` | Thuật toán tấn công và khôi phục bản rõ                            |
-| `src/rsa_core.py`              | Các hàm RSA cốt lõi: sinh khóa, mã hóa, giải mã                    |
-| `src/number_theory.py`         | `gcd`, `extended_gcd`, `mod_inverse`, kiểm tra nguyên tố cùng nhau |
-| `src/file_codec.py`            | Chuyển đổi giữa text, bytes, file và số nguyên                     |
-| `src/display.py`               | Hiển thị trace, bảng, công thức trên terminal                      |
-| `src/rsa.py`                   | Công cụ kiểm thử RSA cơ bản riêng                                  |
+| File                                           | Vai trò                                                            |
+| ---------------------------------------------- | ------------------------------------------------------------------ |
+| `src/main.py`                                  | File chạy chính, khởi tạo giao diện Attack và Cipher               |
+| `src/Attack_rsa_core/common_modulus_attack.py` | Thuật toán tấn công Common Modulus và khôi phục bản rõ             |
+| `src/Display/attackui.py`                      | Giao diện tab Attack, nhập C1, C2, e1, e2, n và hiển thị kết quả   |
+| `src/Display/cipherui.py`                      | Giao diện tab Cipher, mã hóa/giải mã và sinh thông tin RSA         |
+| `src/Display/__init__.py`                      | Đánh dấu thư mục `Display` là package Python                       |
+| `src/File_code/file_codec.py`                  | Chuyển đổi giữa text, bytes, các hệ số và số nguyên                |
+| `src/Number_theory/number_theory.py`           | `gcd`, `extended_gcd`, `mod_inverse`, kiểm tra nguyên tố cùng nhau |
+| `src/Rsa_core/rsa_core.py`                     | Các hàm RSA cốt lõi: sinh khóa, chọn e, mã hóa, giải mã            |
+| `src/Validate/validate_attack.py`              | Kiểm tra dữ liệu đầu vào cho thuật toán tấn công                   |                                |
 
 ## Cài đặt môi trường
 
@@ -138,162 +143,13 @@ pip install -r requirements.txt
 
 ## Chạy nhanh
 
-Lệnh đơn giản nhất để chạy demo tự động:
+Lệnh đơn giản nhất để chạy:
 
 ```bash
-python -m src.main auto
+cd /rsa-modulus-demo/src
+
+python main.py
 ```
-
-## CLI chính: `src.main`
-
-Lệnh gốc:
-
-```bash
-python -m src.main <command> [options]
-```
-
-Các command hiện có:
-
-| Command      | Ý nghĩa               |
-| ------------ | --------------------- |
-| `auto`       | Chạy demo PP2 tự động |
-| `demo`       | Alias của `auto`      |
-| `demo-pp2`   | Alias của `auto`      |
-| `manual`     | Chạy PP2 thủ công     |
-| `attack`     | Alias của `manual`    |
-| `attack-pp2` | Alias của `manual`    |
-
-### Demo tự động PP2
-
-Chạy với bản rõ mặc định:
-
-```bash
-python -m src.main auto
-```
-
-Chạy với bản rõ tự nhập:
-
-```bash
-python -m src.main auto --message "NOI DUNG BAN RO"
-```
-
-Chạy với modulus lớn hơn:
-
-```bash
-python -m src.main auto --message "NOI DUNG BAN RO" --bits 1024
-```
-
-Dùng alias:
-
-```bash
-python -m src.main demo --message "NOI DUNG BAN RO" --bits 512
-python -m src.main demo-pp2 --message "NOI DUNG BAN RO" --bits 512
-```
-
-### Demo với file đầu vào
-
-```bash
-python -m src.main auto --file input.bin --bits 1024
-```
-
-Ghi dữ liệu khôi phục ra file:
-
-```bash
-python -m src.main auto --file input.bin --bits 1024 --output-file recovered.bin
-```
-
-Lưu bộ dữ liệu demo ra JSON:
-
-```bash
-python -m src.main auto --message "HELLO PTIT" --bits 512 --save-json trace.json
-```
-
-### Chạy thủ công PP2
-
-Khi đã có sẵn `N`, `e1`, `e2`, `C1`, `C2`:
-
-```bash
-python -m src.main attack-pp2 --n <N> --e1 <e1> --e2 <e2> --c1 <C1> --c2 <C2>
-```
-
-Hoặc dùng alias:
-
-```bash
-python -m src.main manual --n <N> --e1 <e1> --e2 <e2> --c1 <C1> --c2 <C2>
-python -m src.main attack --n <N> --e1 <e1> --e2 <e2> --c1 <C1> --c2 <C2>
-```
-
-Một số tùy chọn hữu ích ở chế độ thủ công:
-
-- `--decode-text`: thử decode kết quả về UTF-8.
-- `--no-decode-text`: không decode kết quả.
-- `--output-file`: ghi recovered message ra file bytes.
-- `--output-length`: chỉ định số byte khi ghi file.
-- `--save-json`: lưu trace tấn công ra JSON.
-
-## Công cụ RSA cơ bản: `src.rsa`
-
-File `src.rsa` dùng để kiểm thử RSA cơ bản ngoài bài toán Common Modulus Attack.
-
-Lệnh gốc:
-
-```bash
-python -m src.rsa <command> [options]
-```
-
-Các command:
-
-| Command  | Ý nghĩa                                 |
-| -------- | --------------------------------------- |
-| `auto`   | Tự sinh khóa RSA, mã hóa và giải mã     |
-| `manual` | Nhập khóa thủ công để mã hóa và giải mã |
-
-### Ví dụ nhanh
-
-Chạy tự động:
-
-```bash
-python -m src.rsa auto --message "NOI DUNG TIN NHAN" --bits 512
-```
-
-Chạy tự động với `e` tự chọn:
-
-```bash
-python -m src.rsa auto --message "NOI DUNG TIN NHAN" --bits 512 --e 65537
-```
-
-Chạy với file:
-
-```bash
-python -m src.rsa auto --file input.bin --bits 1024
-```
-
-Chạy thủ công với `p`, `q`, `e`:
-
-```bash
-python -m src.rsa manual --p <p> --q <q> --e <e> --m <m>
-```
-
-Chạy thủ công khi đã có `N`, `e`, `d`:
-
-```bash
-python -m src.rsa manual --n <n> --e <e> --d <d> --m <m>
-```
-
-Giải mã một ciphertext có sẵn:
-
-```bash
-python -m src.rsa manual --n <n> --e <e> --d <d> --ciphertext <C>
-```
-
-## Ghi chú khi nhập dữ liệu
-
-- `src.main` hỗ trợ `--message` hoặc `--file` trong chế độ demo tự động.
-- `src.rsa` hỗ trợ `--message`, `--file`, hoặc `--m`.
-- Một số tham số số nguyên có thể nhập ở dạng thập phân, hex (`0x...`) hoặc nhị phân (`0b...`).
-- Nếu dùng file đầu vào, dữ liệu phải đủ nhỏ để thỏa điều kiện `0 <= M < N`.
-- Các bit có thể thay đổi được
-
 ## Kết luận
 
 Project mô phỏng rõ quá trình tấn công **RSA Common Modulus Attack PP2**: sinh dữ liệu, mã hóa cùng một bản rõ dưới hai public exponent khác nhau, tìm hệ số Bézout và khôi phục lại bản rõ bằng Extended Euclidean Algorithm.
