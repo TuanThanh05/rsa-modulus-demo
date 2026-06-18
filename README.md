@@ -146,7 +146,7 @@ pip install -r requirements.txt
 Lệnh đơn giản nhất để chạy:
 
 ```bash
-cd /rsa-modulus-demo/src
+cd src
 
 python main.py
 ```
